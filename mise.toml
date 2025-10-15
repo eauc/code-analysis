@@ -1,0 +1,3 @@
+[tools]
+babashka = "latest"
+clojure = "latest"

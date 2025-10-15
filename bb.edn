@@ -1,0 +1,12 @@
+{:deps {eauc/code-analysis {:local/root "."}}
+ :tasks
+ {repl {:doc "Start a REPL with dev dependencies"
+        :override-builtin true
+        :task (do
+                (println "Starting REPL with dev deps")
+                (apply shell ["clojure" "-M:repl"]))}
+  serve {:doc "Watch & serve Clerk notebooks"
+         :task (do
+                 (println "Watch Clerk notebooks...")
+                 (apply shell
+                        ["clojure" "-X:serve"]))}}}
