@@ -5,11 +5,17 @@
 
 (ns scripts.file-stats
   (:require [clojure.java.io :as io]
+            [clojure.edn :as edn]
             [clojure.string :as str]
             [babashka.fs :as fs]
             [babashka.tasks :refer [shell]]
             [tick.core :as t]
             [utils.core :refer [sum-by count-by]]))
+
+(defn- debug
+  [& args]
+  (binding [*out* *err*]
+    (apply println args)))
 
 (defn count-indents
   [l]
@@ -37,31 +43,57 @@
   [line]
   ; (prn line)
   (let [[blame content] (str/split line #"\)\s")
-        [_ email date] (re-matches #"^[^\s]+\s+(?:[^\s]+\s+)?\(<(?<email>[^>]+)>\s+(?<date>[^\s]+)\s+\d+$" blame)]
+        [_ email date] (re-matches #"^[^(]*\(<(?<email>[^>]*)>\s+(?<date>[^\s]+)\s+\d+$" blame)]
     ; (prn email date content)
     {:email email
      :date date
-     :line (or content "")}))
+     :content (or content "")
+     :line line}))
+
+(defn parse-date
+  [line]
+  (let [{date-str :date} line]
+    (try
+      (t/instant date-str)
+      (catch Exception err
+        (throw (ex-info "Invalid date format." {:date-str date-str :line line} err))))))
 
 (let [[root-path] *command-line-args*
-      file-names (line-seq (io/reader *in*))]
-  (->> file-names
-       (mapv
-        (fn [f]
-          (let [lines (->> (blame-file root-path f)
-                           :out str/split-lines
-                           (remove empty?)
-                           (map parse-blame-line))
-                indents (sum-by (comp count-indents :line) lines)
-                parens (sum-by (comp count-parens :line) lines)
-                indent-parens (sum-by (comp #(* (count-indents %) (count-parens %)) :line) lines)
-                authors (count-by :email lines)
-                dates (count-by (comp str t/date t/instant :date) lines)]
-            [f {:complexity {:lines (-> lines count)
-                             :indents indents
-                             :parens parens
-                             :indent-parens indent-parens}
-                :authors authors
-                :dates dates}])))
-       (into {})
-       prn))
+      file-names (line-seq (io/reader *in*))
+      total-count (count file-names)
+      cache-path (fs/path root-path ".file_stats_cache.edn")
+      data (try
+             (-> (fs/file cache-path)
+                 slurp
+                 edn/read-string)
+             (catch Exception _ {}))]
+  (prn
+   (loop [[f & rest] file-names
+          i 1
+          result data]
+     (if-not f
+       result
+       (if (get result f)
+         (do
+           (debug (str i "/" total-count) f "-- cached")
+           (recur rest (inc i) result))
+         (do
+           (debug (str i "/" total-count) f)
+           (let [lines (->> (blame-file root-path f)
+                            :out str/split-lines
+                            (remove empty?)
+                            (map parse-blame-line))
+                 indents (sum-by (comp count-indents :content) lines)
+                 parens (sum-by (comp count-parens :content) lines)
+                 indent-parens (sum-by (comp #(* (count-indents %) (count-parens %)) :content) lines)
+                 authors (count-by :email lines)
+                 dates (count-by (comp str t/date parse-date) lines)
+                 file-stats {:complexity {:lines (-> lines count)
+                                          :indents indents
+                                          :parens parens
+                                          :indent-parens indent-parens}
+                             :authors authors
+                             :dates dates}
+                 result (assoc result f file-stats)]
+             (fs/write-lines cache-path [(pr-str result)])
+             (recur rest (inc i) result))))))))

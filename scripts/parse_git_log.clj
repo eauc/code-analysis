@@ -1,7 +1,7 @@
 #!/usr/bin/env bb
 
 ; git log
-; --format="format:===%nhash: %H%nauthor: %aN%nauthor-email: %aE%nauthor-date: %aI%nparent: %P%ndescription: %s%n---"
+; --format="format:===%nhash: %H%nauthor: %aN%nauthor-email: %aE%ndate: %aI%nparent: %P%ndescription: %s%n---"
 ; --no-merges --numstat -M25% --ignore-blank-lines --ignore-all-space
 ; > log.txt
 ; ./scripts/parse_git_log.clj < log.txt > log.edn

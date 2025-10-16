@@ -10,7 +10,11 @@
           color-k :color
           :keys [type max-depth]
           :or {type :treemap
-               max-depth 3}}]
+               max-depth 3
+               id-k :id
+               value-k :value
+               label-k :id
+               color-k :color}}]
   (let [parents (map :parent nodes)
         ids (map id-k nodes)
         values (map value-k nodes)

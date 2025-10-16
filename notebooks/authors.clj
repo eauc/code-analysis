@@ -22,7 +22,7 @@
 (def log
   (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn")))))
 
-; ## Files complexity data
+; ## Files stats data
 ^{::clerk/no-cache true}
 (def file-stats
   (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn")))))
@@ -76,7 +76,8 @@
 
 (doall
  (for [[metric name] [[(constantly 1) "#commits"]
-                      [:diff "diff"]]]
+                      [:diff "diff"]
+                      [:churn "churn"]]]
    (let [metrics (->> commits
                       (->time-serie #(->metric-by metric :author %))
                       (cumulative-sum))]

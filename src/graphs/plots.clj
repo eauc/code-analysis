@@ -3,12 +3,14 @@
   (:require [nextjournal.clerk :as clerk]))
 
 (defn plot-data
-  [data [serie name]]
-  {:type :scatter
-   :mode :line
-   :name name
-   :x (map first data)
-   :y (map #(-> % second (get serie 0)) data)})
+  [data [serie name color]]
+  (merge {:type :scatter
+          :mode :line
+          :name name
+          :x (map first data)
+          :y (map #(-> % second (get serie 0)) data)}
+         (when color
+           {:marker {:color color}})))
 
 (defn plots
   [{:keys [data series stacked? title]}]

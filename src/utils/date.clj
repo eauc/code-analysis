@@ -3,9 +3,11 @@
   (:require [tick.core :as t]))
 
 (defn min-date
-  [a b]
-  (if (t/< a b) a b))
+  ([] nil)
+  ([a b]
+   (if (t/< a b) a b)))
 
 (defn max-date
-  [a b]
-  (if (t/< a b) b a))
+  ([] nil)
+  ([a b]
+   (if (t/< a b) b a)))
