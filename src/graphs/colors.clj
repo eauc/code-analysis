@@ -9,6 +9,6 @@
   [coll]
   (let [value->color
         (->> coll
-             (map (fn [color value] [value color]) (cycle default-colors))
+             (mapv (fn [color value] [value color]) (cycle default-colors))
              (into {}))]
     #(get value->color % "grey")))

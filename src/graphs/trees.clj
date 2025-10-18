@@ -15,11 +15,11 @@
                value-k :value
                label-k :id
                color-k :color}}]
-  (let [parents (map :parent nodes)
-        ids (map id-k nodes)
-        values (map value-k nodes)
-        labels (map label-k nodes)
-        colors (map color-k nodes)]
+  (let [parents (mapv :parent nodes)
+        ids (mapv id-k nodes)
+        values (mapv value-k nodes)
+        labels (mapv label-k nodes)
+        colors (mapv color-k nodes)]
     {:type type
      :parents parents
      :ids ids

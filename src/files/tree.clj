@@ -13,17 +13,28 @@
         {})))
 
 (defn tree->nodes
-  ([parent frag child]
-   (if (string? child)
-     [{:parent parent :path frag :type :file}]
-     (concat [{:parent parent :path frag :type :directory}]
-             (mapcat
-              (fn [[k v]]
-                (tree->nodes frag k v))
-              child))))
+  ([depth parent frag children]
+   (if (string? children)
+     [{:path frag
+       :type :file
+       :parent parent
+       :depth depth
+       :leaves [frag]}]
+     (let [path (str frag "/")
+           child-nodes (mapcat #(apply tree->nodes (inc depth) path %) children)
+           leaves (->> child-nodes
+                       (filterv #(= path (:parent %)))
+                       (mapcat :leaves))]
+       (concat [{:path path
+                 :type :directory
+                 :parent parent
+                 :depth depth
+                 :leaves leaves}]
+               child-nodes))))
+
   ([root-name tree]
    (mapcat
-    (fn [[k v]] (tree->nodes root-name k v))
+    (fn [[k v]] (tree->nodes 1 root-name k v))
     tree)))
 
 (defn files->nodes
@@ -31,3 +42,13 @@
   (->> files
        files->tree
        (tree->nodes root-name)))
+
+(defn child-nodes
+  [path file-nodes]
+  (filterv #(= (:parent %) path) file-nodes))
+
+(defn filter-max-depth
+  [max-depth file-nodes]
+  (->> file-nodes
+       (filterv #(>= (-> % :module :max-depth (or max-depth))
+                    (:depth %)))))

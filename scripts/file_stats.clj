@@ -1,5 +1,6 @@
 #!/usr/bin/env bb
 
+; git-config core.quotePath = false
 ; git ls-tree --full-tree --name-only -r HEAD > files.txt
 ; ./scripts/file_stats.clj ~/code/xplo/tree-sitter < files.txt > file_stats.edn
 
@@ -24,7 +25,7 @@
 
 (defn count-parens
   [l]
-  (count (filter #{\( \{ \[} l)))
+  (count (filterv #{\( \{ \[} l)))
 
 (defn blame-file
   [root-path file-path]
@@ -82,7 +83,7 @@
            (let [lines (->> (blame-file root-path f)
                             :out str/split-lines
                             (remove empty?)
-                            (map parse-blame-line))
+                            (mapv parse-blame-line))
                  indents (sum-by (comp count-indents :content) lines)
                  parens (sum-by (comp count-parens :content) lines)
                  indent-parens (sum-by (comp #(* (count-indents %) (count-parens %)) :content) lines)

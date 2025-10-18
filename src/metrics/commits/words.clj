@@ -5,37 +5,12 @@
 (defn commit-words
   [commits]
   (->> commits
-       (map :description)
+       (mapv :description)
        (mapcat #(clojure.string/split % #"[^\w]+"))
-       (remove #(re-find #"^(|.|an|to|by|in|into|on|the|from|no|do|don|for|it|if|is|be|are|as|this|that|there|these|and|not|of|get|use|using|less|some|more|when|with|\d+)$" %))))
-
-(def not-func-words
-  #{"add"
-    "build"
-    "bump"
-    "check"
-    "ci"
-    "debug"
-    "deps"
-    "doc"
-    "docs"
-    "feat"
-    "fix"
-    "function"
-    "implement"
-    "make"
-    "new"
-    "patch"
-    "refacto"
-    "refactor"
-    "remove"
-    "update"
-    "test"
-    "tests"
-    "error"})
+       (remove #(re-find #"(?i)^(|.|an|as|to|by|in|it|if|is|be|on|the|no|do|don|all|from|for|are|into|this|that|there|these|and|not|of|get|use|using|less|some|more|we|when|with|\d+)$" %))))
 
 (defn commit-func-words
   [commits]
   (->> commits
        commit-words
-       (remove (comp not-func-words clojure.string/lower-case))))
+       (remove #(re-find #"(?i)^(implement|refacto|cleanup|fix|ci|new|error|update|check|make|build|remove|debug|patch|function|deps|tests|e2e|bump|add|refactor|docs|feat|doc|test)$" %))))

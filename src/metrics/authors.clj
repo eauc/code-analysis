@@ -11,8 +11,8 @@
 (defn ->authors-stats
   [authors commits]
   (->> authors
-       (map (fn [[email _]]
-              (let [commits (->> commits (filter #(= email (:author %))))]
+       (mapv (fn [[email _]]
+              (let [commits (->> commits (filterv #(= email (:author %))))]
                 {:author (email->author email authors)
                  :email email
                  :added (sum-by :added commits)
@@ -20,22 +20,22 @@
                  :edits (sum-by :edits commits)
                  :diff (sum-by :diff commits)
                  :churn (sum-by :churn commits)
-                 :first-contrib (->> commits (map :date) (reduce min-date) str)
-                 :last-contrib (->> commits (map :date) (reduce max-date) str)})))
+                 :first-contrib (->> commits (mapv :date) (reduce min-date) str)
+                 :last-contrib (->> commits (mapv :date) (reduce max-date) str)})))
        (sort-by :edits)
        reverse))
 
 (defn ->file-authors
   [files file-stats]
   (->> files
-       (map (fn [path] [path (get-in file-stats [path :authors])]))
+       (mapv (fn [path] [path (get-in file-stats [path :authors])]))
        (into {})))
 
 (defn path-author
   [path file-authors]
   (->> file-authors
-       (filter #(clojure.string/starts-with? (first %) path))
-       (map second)
+       (filterv #(clojure.string/starts-with? (first %) path))
+       (mapv second)
        (apply merge-with +)
        (sort-by second)
        last
@@ -43,10 +43,12 @@
 
 (defn file-nodes-with-author
   [authors file-stats file-nodes]
-  (let [files (->> file-nodes (filter #(= (:type %) :file)) (map :path))
-        file-authors (->file-authors files file-stats)]
-    (map
-     (fn [{:keys [path] :as node}]
-       (let [author (-> path (path-author file-authors) (email->author authors))]
-         (assoc node :author author)))
-     file-nodes)))
+  (->> file-nodes
+       (mapv (fn [{:keys [leaves] :as node}]
+              (let [email (->> leaves
+                               (mapv (comp :authors file-stats))
+                               (apply merge-with +)
+                               (sort-by #(- (second %)))
+                               first
+                               first)]
+                (assoc node :author (email->author email authors)))))))

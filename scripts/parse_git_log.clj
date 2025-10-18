@@ -13,6 +13,11 @@
             [tick.core :as t]
             [utils.core :refer [sum-by]]))
 
+(defn debug
+  [& args]
+  (binding [*out* *err*]
+    (apply println args)))
+
 (defmulti fmt-prop first)
 
 (defmethod fmt-prop
@@ -36,8 +41,8 @@
 (defn- parse-props
   [lines]
   (->> lines
-       (map parse-prop)
-       (map (fn [[k v]] [k (fmt-prop [k v])]))
+       (mapv parse-prop)
+       (mapv (fn [[k v]] [k (fmt-prop [k v])]))
        (into {})))
 
 (def file-deltas-pattern
@@ -77,12 +82,12 @@
 
 (defn- parse-deltas
   [lines]
-  (let [delta-tuples (map parse-file-deltas lines)
+  (let [delta-tuples (mapv parse-file-deltas lines)
         deltas (->> delta-tuples
-                    (map (fn [[file-name deltas]] [file-name deltas]))
+                    (mapv (fn [[file-name deltas]] [file-name deltas]))
                     (into {}))
         moves (->> delta-tuples
-                   (map #(nth % 2))
+                   (mapv #(nth % 2))
                    (into {}))]
     (merge
      {:deltas deltas}
@@ -106,19 +111,19 @@
   (let [lines (line-seq (io/reader *in*))]
     (->> lines
          (split-separator "===")
-         (map parse-log))))
+         (mapv parse-log))))
 
 (def authors
   (let [authors (->> logs
-                     (map (juxt :author-email :author))
+                     (mapv (juxt :author-email :author))
                      (distinct)
                      (group-by first))]
-    (update-vals authors #(map second %))))
+    (update-vals authors #(mapv second %))))
 
 (def moves
   (->> logs
-       (map :moves)
-       (filter identity)
+       (mapv :moves)
+       (filterv identity)
        reverse))
 
 (defn- -final-name
@@ -136,15 +141,15 @@
   (let [file-aliases (->> logs
                           (mapcat (comp keys :deltas))
                           distinct
-                          (map #(vector % (final-name %)))
+                          (mapv #(vector % (final-name %)))
                           (remove (fn [[k v]] (= k v)))
                           (group-by second))]
-    (update-vals file-aliases #(->> % (map first) set))))
+    (update-vals file-aliases #(->> % (mapv first) set))))
 
 (defn- log->commit
   [log]
   (let [{:keys [deltas]} log
-        deltas (map second deltas)]
+        deltas (mapv second deltas)]
     (-> log
         (select-keys [:hash :author-email :date :description])
         (clojure.set/rename-keys {:author-email :author})
@@ -156,16 +161,16 @@
 
 (def commits
   (->> logs
-       (map log->commit)))
+       (mapv log->commit)))
 
 (def file-deltas
   (let [file-deltas (->> logs
-                         (mapcat (fn [{:keys [deltas hash]}] (update-vals deltas #(assoc % :hash hash))))
-                         (map (fn [[commit-name commit-deltas]]
+                         (mapcat (fn [{:keys [deltas hash author date]}] (update-vals deltas #(assoc % :hash hash))))
+                         (mapv (fn [[commit-name commit-deltas]]
                                 (let [f-name (final-name commit-name)]
                                   [f-name (cond-> commit-deltas (not= f-name commit-name) (assoc :as commit-name))])))
                          (group-by first))]
-    (update-vals file-deltas #(map second %))))
+    (update-vals file-deltas #(mapv second %))))
 
 (prn
  {:commits commits

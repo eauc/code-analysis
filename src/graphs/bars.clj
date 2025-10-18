@@ -7,13 +7,13 @@
    options
    {:type :bar
     :name name
-    :x (map values data)
-    :y (map names data)}))
+    :x (mapv values data)
+    :y (mapv names data)}))
 
 (defn h-bars
   [{:keys [title data names series]}]
   (clerk/plotly
-   {:data (map #(-> (bars-data data names %)
+   {:data (mapv #(-> (bars-data data names %)
                     (merge {:orientation :h})) series)
     :layout {:title {:text title}
              :yaxis {:automargin true}}

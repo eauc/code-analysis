@@ -2,7 +2,7 @@
 
 (defn sum-by
   [by coll]
-  (->> coll (map by) (apply +)))
+  (->> coll (mapv by) (apply +)))
 
 (defn count-by
   [by coll]

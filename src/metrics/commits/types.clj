@@ -1,7 +1,8 @@
 (ns metrics.commits.types
   {:nextjournal.clerk/visibility {:code :hide :result :show}}
   (:require [clojure.string]
-            [metrics.core :refer [->metric]]))
+            [files.deltas :refer [deltas-join-commits]]
+            [metrics.core :refer [->metric-by]]))
 
 (def ordered-commit-types
   [:feat
@@ -39,7 +40,7 @@
   (let [description (clojure.string/lower-case description)]
     (cond
       ; keywords
-      (re-find #"(?:^|[^\w])(fix|revert|typo|error)" description) :fix
+      (re-find #"(?:^|[^\w])(bug|fix|revert|typo|error)" description) :fix
       (re-find #"(?:^|[^\w])refacto" description) :refacto
       (re-find #"(?:^|[^\w])(feat)" description) :feat
       (re-find #"(?:^|[^\w])test" description) :test
@@ -63,5 +64,14 @@
 
 (defn commits-with-type
   [commits]
-  (map #(assoc % :type (commit-type %)) commits))
+  (mapv #(assoc % :type (commit-type %)) commits))
 
+(defn file-nodes-with-commit-type-edits
+  [commits file-deltas file-nodes]
+  (->> file-nodes
+       (mapv (fn [{:keys [leaves] :as node}]
+              (let [fixes (->> leaves
+                               (mapcat file-deltas)
+                               (deltas-join-commits [:type] commits)
+                               (->metric-by :edits :type))]
+                (assoc node :type->edits fixes))))))
