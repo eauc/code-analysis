@@ -13,8 +13,20 @@
 (defn h-bars
   [{:keys [title data names series]}]
   (clerk/plotly
-   {:data (mapv #(-> (bars-data data names %)
-                    (merge {:orientation :h})) series)
+   {:data (mapv
+           #(-> (bars-data data names %)
+                (merge {:orientation :h}))
+           series)
     :layout {:title {:text title}
              :yaxis {:automargin true}}
     :config {:displayModeBar false}}))
+
+(defn v-bars
+  [{:keys [title data]}]
+  (let [x (keys data)]
+   (clerk/plotly
+    {:data [{:x x
+             :y (map data x)
+             :type :bar}]
+     :layout {:title {:text title}}
+     :config {:displayModeBar false}})))
