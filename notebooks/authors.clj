@@ -64,11 +64,19 @@
 
 ; ### Commits log data
 (def log
-  (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn")))))
+  (edn/read (java.io.PushbackReader. (io/reader (or (config :log-path)
+                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn"))))))
 
 ; ### Files stats data
 (def file-stats
-  (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn")))))
+  (edn/read (java.io.PushbackReader. (io/reader (or (config :file-stats-path)
+                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn"))))))
+
+; ### Files
+(def files
+  (->> (keys file-stats)
+       (remove (fn [path]
+                 (some #(re-find % path) (config :exclude-paths))))))
 
 ^{::clerk/visibility {:result :hide}}
 (def authors
@@ -121,10 +129,6 @@
 ; ## File authors
 
 ^{::clerk/visibility {:result :hide}}
-(def files
-  (keys file-stats))
-
-^{::clerk/visibility {:result :hide}}
 (def top-authors
   (->> (select-keys file-stats files)
        (mapv (comp :authors second))
@@ -143,7 +147,7 @@
   :colors author->color
   :order (mapv first top-authors)})
 
-; ^{::clerk/visibility {:result :hide}}
+^{::clerk/visibility {:result :hide}}
 (def nodes
   (->> files
        (files->nodes example)

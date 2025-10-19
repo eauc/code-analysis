@@ -60,19 +60,31 @@
                        [:test {:match #"^test/" :max-depth 2}]])}}
     example)))
 
+; ### Commits log data
+(def log
+  (edn/read (java.io.PushbackReader. (io/reader (or (config :log-path)
+                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn"))))))
+
 ; ### Files stats data
 (def file-stats
-  (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn")))))
+  (edn/read (java.io.PushbackReader. (io/reader (or (config :file-stats-path)
+                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn"))))))
+
+; ### Files
+(def files
+  (->> (keys file-stats)
+       (remove (fn [path]
+                 (some #(re-find % path) (config :exclude-paths))))))
 
 ^{::clerk/visibility {:result :hide}}
 (def now
-  (t/date))
+  (-> (t/date) (t/<< (t/of-months (config :time-stop-months 0)))))
 
 ; ## Age distribution
 
 ^{::clerk/visibility {:result :hide}}
 (def line-ages
-  (->> file-stats
+  (->> (select-keys file-stats files)
        vals
        (mapv :dates)
        (apply merge-with +)))
@@ -86,9 +98,10 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def file-age-stats
-  (update-vals
-   file-stats
-   (comp dates->age-stats :dates)))
+  (-> file-stats
+      (select-keys files)
+      (update-vals
+       (comp dates->age-stats :dates))))
 
 ^{::clerk/visibility {:result :hide}}
 (def metrics
@@ -111,7 +124,7 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def base-nodes
-  (->> (keys file-stats)
+  (->> files
        (files->nodes example)
        (file-nodes-with-module-config (config :modules))
        (filter-max-depth (config :max-depth))

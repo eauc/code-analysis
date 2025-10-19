@@ -3,7 +3,6 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string]
-            [clj-async-profiler.core :as prof]
             [files.deltas :refer [deltas-join-commits filter-since]]
             [files.modules :refer [->modules file-nodes-with-module-config]]
             [files.tree :refer [files->nodes filter-max-depth]]
@@ -62,11 +61,19 @@
 
 ; ### Commits log data
 (def log
-  (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn")))))
+  (edn/read (java.io.PushbackReader. (io/reader (or (config :log-path)
+                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn"))))))
 
 ; ### Files stats data
 (def file-stats
-  (edn/read (java.io.PushbackReader. (io/reader (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn")))))
+  (edn/read (java.io.PushbackReader. (io/reader (or (config :file-stats-path)
+                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn"))))))
+
+; ### Files
+(def files
+  (->> (keys file-stats)
+       (remove (fn [path]
+                 (some #(re-find % path) (config :exclude-paths))))))
 
 ^{::clerk/visibility {:result :hide}}
 (def commits
@@ -77,12 +84,11 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def file-deltas
-  (prof/profile
-    (-> (:file-deltas log)
-        (select-keys (keys file-stats))
-        (update-vals #(->> %
-                           (deltas-join-commits [:date] commits)
-                           (filter-since (config :since)))))))
+  (-> (:file-deltas log)
+      (select-keys files)
+      (update-vals #(->> %
+                         (deltas-join-commits [:date] commits)
+                         (filter-since (config :since))))))
 
 ^{::clerk/visibility {:result :hide}}
 (def metrics
@@ -90,7 +96,7 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def base-nodes
-  (->> (keys file-stats)
+  (->> files
        (files->nodes example)
        (file-nodes-with-module-config (config :modules))
        (filter-max-depth (config :max-depth))
@@ -99,20 +105,19 @@
        (file-nodes-with-changes file-deltas)))
 
 (->> metrics
-      (mapcat
-       (fn [[title metric]]
-         (let [nodes (mapv #(assoc % :metric (metric %)) base-nodes)
-               file-nodes (filterv #(= (:type %) :file) nodes)]
-           [(clerk/html
-             [:div
-              [:h3 title]
-              [:p "File with max changes:"]
-              (top-files-list :metric file-nodes)])
-            (tree-plot
-             {:nodes nodes
-              :id :path
-              :label (fn [{:keys [depth metric path]}]
-                       (str depth " - " path "<br />" (metric->str metric)))
-              :color (metric->color :metric file-nodes)
-              :value (complexity->tree-plot-value nodes)
-              :max-depth -1})]))))
+     (mapcat
+      (fn [[title metric]]
+        (let [nodes (mapv #(assoc % :metric (metric %)) base-nodes)]
+          [(clerk/html
+            [:div
+             [:h3 title]
+             [:p "File with max changes:"]
+             (top-files-list :metric nodes)])
+           (tree-plot
+            {:nodes nodes
+             :id :path
+             :label (fn [{:keys [depth metric path]}]
+                      (str depth " - " path "<br />" (metric->str metric)))
+             :color (metric->color :metric nodes)
+             :value (complexity->tree-plot-value nodes)
+             :max-depth -1})]))))
