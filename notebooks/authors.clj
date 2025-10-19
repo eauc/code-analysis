@@ -3,7 +3,7 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string]
-            [files.modules :refer [->modules file-nodes-with-module]]
+            [files.modules :refer [->modules file-nodes-with-module-config]]
             [files.tree :refer [files->nodes filter-max-depth]]
             [graphs.bars :refer [h-bars]]
             [graphs.colors :refer [colors-for]]
@@ -147,7 +147,7 @@
 (def nodes
   (->> files
        (files->nodes example)
-       (file-nodes-with-module (config :modules))
+       (file-nodes-with-module-config (config :modules))
        (filter-max-depth (config :max-depth))
        (file-nodes-with-complexity file-stats)
        (filter-min-complexity :lines (config :min-complexity))

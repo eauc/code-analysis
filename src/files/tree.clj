@@ -12,11 +12,16 @@
             (assoc-in tree sub-paths path)))
         {})))
 
+(defn basename
+  [path]
+  (-> path (clojure.string/split #"/") last))
+
 (defn tree->nodes
   ([depth parent frag children]
    (if (string? children)
      [{:path frag
        :type :file
+       :basename (basename frag)
        :parent parent
        :depth depth
        :leaves [frag]}]
@@ -27,6 +32,7 @@
                        (mapcat :leaves))]
        (concat [{:path path
                  :type :directory
+                 :basename (-> path basename (str "/"))
                  :parent parent
                  :depth depth
                  :leaves leaves}]
@@ -47,8 +53,16 @@
   [path file-nodes]
   (filterv #(= (:parent %) path) file-nodes))
 
+(defn filter-paths
+  [paths file-nodes]
+  (->> file-nodes
+       (filter (fn [{:keys [path]}]
+                 (some
+                  #(clojure.string/starts-with? % path)
+                  paths)))))
+
 (defn filter-max-depth
   [max-depth file-nodes]
   (->> file-nodes
        (filterv #(>= (-> % :module :max-depth (or max-depth))
-                    (:depth %)))))
+                     (:depth %)))))

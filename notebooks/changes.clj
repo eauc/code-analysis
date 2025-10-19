@@ -5,7 +5,7 @@
             [clojure.string]
             [clj-async-profiler.core :as prof]
             [files.deltas :refer [deltas-join-commits filter-since]]
-            [files.modules :refer [->modules file-nodes-with-module]]
+            [files.modules :refer [->modules file-nodes-with-module-config]]
             [files.tree :refer [files->nodes filter-max-depth]]
             [graphs.trees :refer [tree-plot]]
             [metrics.changes :refer [file-nodes-with-changes]]
@@ -92,7 +92,7 @@
 (def base-nodes
   (->> (keys file-stats)
        (files->nodes example)
-       (file-nodes-with-module (config :modules))
+       (file-nodes-with-module-config (config :modules))
        (filter-max-depth (config :max-depth))
        (file-nodes-with-complexity file-stats)
        (filter-min-complexity :lines (config :min-complexity))
