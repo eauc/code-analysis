@@ -44,7 +44,7 @@
   [line]
   ; (prn line)
   (let [[blame content] (str/split line #"\)\s")
-        [_ email date] (re-matches #"^[^(]*\(<(?<email>[^>]*)>\s+(?<date>[^\s]+)\s+\d+$" blame)]
+        [_ email date] (re-matches #"^.*\(<(?<email>[^>]*)>\s+(?<date>[^\s]+)\s+\d+$" blame)]
     ; (prn email date content)
     {:email email
      :date date
