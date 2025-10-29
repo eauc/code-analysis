@@ -13,4 +13,4 @@
   [commits]
   (->> commits
        commit-words
-       (remove #(re-find #"(?i)^(implement|refacto|clean|cleanup|skip|try|fix|ci|new|error|update|check|make|build|remove|debug|patch|function|deps|tests|e2e|bump|add|refactor|docs|feat|doc|test)$" %))))
+       (remove #(re-find #"(?i)^(implement|refacto|clean|cleanup|chore|tech|code|rename|move|create|log|review|change|skip|try|fix|ci|new|error|update|check|make|build|remove|debug|patch|function|deps|tests|e2e|bump|add|refactor|docs|feat|doc|test)$" %))))
