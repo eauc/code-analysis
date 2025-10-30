@@ -5,13 +5,21 @@
 ; ./scripts/file_stats.clj ~/code/xplo/tree-sitter < files.txt > file_stats.edn
 
 (ns scripts.file-stats
-  (:require [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [clojure.string :as str]
-            [babashka.fs :as fs]
-            [babashka.tasks :refer [shell]]
-            [tick.core :as t]
-            [utils.core :refer [sum-by count-by]]))
+  (:refer-clojure :exclude [force])
+  (:require
+   [clojure.java.io :as io]
+   [clojure.edn :as edn]
+   [clojure.string :as str]
+   [babashka.fs :as fs]
+   [babashka.tasks :refer [shell]]
+   [tick.core :as t]
+   [utils.core :refer [sum-by count-by]]))
+
+(def force
+  false)
+
+(def path-filter
+  #"^.")
 
 (defn- debug
   [& args]
@@ -60,7 +68,8 @@
         (throw (ex-info "Invalid date format." {:date-str date-str :line line} err))))))
 
 (let [[root-path] *command-line-args*
-      file-names (line-seq (io/reader *in*))
+      file-names (->> (line-seq (io/reader *in*))
+                      (filterv (fn [path] (re-find path-filter path))))
       total-count (count file-names)
       cache-path (fs/path root-path ".file_stats_cache.edn")
       data (try
@@ -74,7 +83,7 @@
           result data]
      (if-not f
        result
-       (if (get result f)
+       (if (and (not force) (get result f))
          (do
            (debug (str i "/" total-count) f "-- cached")
            (recur rest (inc i) result))
