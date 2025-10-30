@@ -5,7 +5,7 @@
    [config :as cfg]
    [data.file-stats]
    [data.log]
-   [files.deltas :refer [deltas-join-commits filter-since]]
+   [files.deltas :refer [deltas-join-commits]]
    [files.modules :refer [file-nodes-with-module-config]]
    [files.tree :refer [files->nodes filter-max-depth]]
    [graphs.trees :refer [tree-plot]]
@@ -19,11 +19,11 @@
 ; Project
 
 (def project-name
-  "georges-lib")
+  "tree-sitter")
 
 ; Config
 
-; ^::clerk/no-cache
+^::clerk/no-cache
 (def config
   (cfg/read! project-name))
 

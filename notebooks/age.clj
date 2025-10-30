@@ -21,11 +21,11 @@
 ; Project
 
 (def project-name
-  "georges-lib")
+  "tree-sitter")
 
 ; Config
 
-; ^::clerk/no-cache
+^::clerk/no-cache
 (def config
   (cfg/read! project-name))
 

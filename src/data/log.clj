@@ -5,16 +5,32 @@
    [tick.core :as t]))
 
 (defn- project-file-deltas
-  [{:keys [filter-paths exclude-paths] :as _config} commits file-deltas]
+  [{:keys [root filter-paths exclude-paths] :as _config} commits file-deltas]
   (let [hashes (->> commits (map :hash) set)]
-    (->> file-deltas
-         (filter (fn [[path _]]
-                   (some #(re-find % path) filter-paths)))
-         (remove (fn [[path _]]
-                   (some #(re-find % path) exclude-paths)))
-         (map (fn [[path deltas]]
-                [path (filterv (comp hashes :hash) deltas)]))
-         (into {}))))
+    (cond->> file-deltas
+      :always
+      (filterv (fn [[path _]]
+                 (re-find root path)))
+
+      :always
+      (map (fn [[path v]]
+             (let [root-prefix (re-find root path)]
+               [(subs path (count root-prefix)) v])))
+
+      (seq filter-paths)
+      (filterv (fn [[path _]]
+                 (some #(re-find % path) filter-paths)))
+
+      (seq exclude-paths)
+      (remove (fn [[path _]]
+                (some #(re-find % path) exclude-paths)))
+
+      :always
+      (mapv (fn [[path deltas]]
+              [path (filterv (comp hashes :hash) deltas)]))
+
+      :always
+      (into {}))))
 
 (defn- deltas->change-stats
   [deltas]

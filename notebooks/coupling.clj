@@ -1,30 +1,29 @@
 (ns coupling
   {:nextjournal.clerk/visibility {:code :hide :result :show}}
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.string]
-            [config :as cfg]
-            [data.file-stats]
-            [data.log]
-            [files.modules :refer [->modules file-nodes-with-module-config files->module-paths]]
-            [files.tree :refer [files->nodes filter-max-depth]]
-            [graphs.tree-deps :refer [tree-deps-plot]]
-            [graphs.trees :refer [tree-plot]]
-            [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
-            [metrics.core :refer [metric->color metric->str top-files-list]]
-            [metrics.coupling :refer [->coupling-factors coupling-factors->deps ->coupling-tree file-nodes-with-coupling-scores]]
-            [nextjournal.clerk :as clerk]
-            [tick.core :as t]))
+  (:require
+   [clojure.string]
+   [config :as cfg]
+   [data.file-stats]
+   [data.log]
+   [files.modules :refer [file-nodes-with-module-config files->module-paths]]
+   [files.tree :refer [files->nodes filter-max-depth]]
+   [graphs.tree-deps :refer [tree-deps-plot]]
+   [graphs.trees :refer [tree-plot]]
+   [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
+   [metrics.core :refer [metric->color metric->str top-files-list]]
+   [metrics.coupling :refer [->coupling-factors coupling-factors->deps ->coupling-tree file-nodes-with-coupling-scores]]
+   [nextjournal.clerk :as clerk]))
 
 ; # Coupling
 
 ; Project
 
 (def project-name
-  "georges-lib")
+  "tree-sitter")
 
 ; config
 
+^::clerk/no-cache
 (def config
   (cfg/read! project-name))
 
@@ -52,7 +51,7 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def coupling-factors
-   (->coupling-factors file-deltas module-paths))
+  (->coupling-factors file-deltas module-paths))
 
 ^{::clerk/visibility {:result :hide}}
 (def coupling-deps

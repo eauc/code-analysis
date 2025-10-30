@@ -15,19 +15,18 @@
    [metrics.commits.words :refer [commit-words commit-func-words]]
    [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
    [metrics.core :refer [->metric-by ->time-serie cumulative-sum metric->color top-files-list]]
-   [nextjournal.clerk :as clerk]
-   [tick.core :as t]))
+   [nextjournal.clerk :as clerk]))
 
 ; # Commits
 
 ; Project
 
 (def project-name
-  "georges-lib")
+  "georges")
 
 ; Config
 
-; ^::clerk/no-cache
+^::clerk/no-cache
 (def config
   (cfg/read! project-name))
 

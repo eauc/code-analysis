@@ -10,8 +10,8 @@
             :file-stats-path (str "examples/" project-name "/file_stats.edn")
             :max-depth 1000
             :min-complexity 1
-            :filter-paths [#"^."]
-            :time-start-years 10
+            :root #"^"
+            :time-start-years 30
             :time-stop-months 0}
            (raw project-name))
         start-time (-> (t/zoned-date-time) (t/<< (t/of-years (c :time-start-years))) t/date)

@@ -4,13 +4,27 @@
    [clojure.java.io :as io]))
 
 (defn project-file-stats
-  [{:keys [filter-paths exclude-paths] :as _config} file-stats]
-  (->> file-stats
-       (filter (fn [[path _]]
-                 (some #(re-find % path) filter-paths)))
-       (remove (fn [[path _]]
-                 (some #(re-find % path) exclude-paths)))
-       (into {})))
+  [{:keys [root filter-paths exclude-paths] :as _config} file-stats]
+  (cond->> file-stats
+    :always
+    (filterv (fn [[path _]]
+               (re-find root path)))
+
+    :always
+    (map (fn [[path v]]
+           (let [root-prefix (re-find root path)]
+             [(subs path (count root-prefix)) v])))
+
+    (seq filter-paths)
+    (filter (fn [[path _]]
+              (some #(re-find % path) filter-paths)))
+
+    (seq exclude-paths)
+    (remove (fn [[path _]]
+              (some #(re-find % path) exclude-paths)))
+
+    :always
+    (into {})))
 
 (defn read!
   [config]
