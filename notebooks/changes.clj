@@ -52,9 +52,7 @@
 ; ^{::clerk/visibility {:result :hide}}
 (def file-deltas
   (-> (:file-deltas log)
-      (update-vals #(->> %
-                         (deltas-join-commits [:date] commits)
-                         (filter-since (config :start-time))))))
+      (update-vals #(deltas-join-commits [:date] commits %))))
 
 ^{::clerk/visibility {:result :hide}}
 (def metrics

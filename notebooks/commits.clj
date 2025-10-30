@@ -1,23 +1,22 @@
 (ns commits
   {:nextjournal.clerk/visibility {:code :hide :result :show}}
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.pprint :as pprint]
-            [clojure.string]
-            [config :as cfg]
-            [data.file-stats]
-            [data.log]
-            [files.modules :refer [->modules file-nodes-with-module-config]]
-            [files.tree :refer [files->nodes filter-max-depth]]
-            [graphs.pies :refer [pie]]
-            [graphs.plots :refer [plots]]
-            [graphs.trees :refer [tree-plot]]
-            [metrics.commits.types :refer [commit-type->color commits-with-type ordered-commit-types file-nodes-with-commit-type-edits]]
-            [metrics.commits.words :refer [commit-words commit-func-words]]
-            [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
-            [metrics.core :refer [->metric-by ->time-serie cumulative-sum metric->color top-files-list]]
-            [nextjournal.clerk :as clerk]
-            [tick.core :as t]))
+  (:require
+   [clojure.pprint :as pprint]
+   [clojure.string]
+   [config :as cfg]
+   [data.file-stats]
+   [data.log]
+   [files.modules :refer [file-nodes-with-module-config]]
+   [files.tree :refer [files->nodes filter-max-depth]]
+   [graphs.pies :refer [pie]]
+   [graphs.plots :refer [plots]]
+   [graphs.trees :refer [tree-plot]]
+   [metrics.commits.types :refer [commit-type->color commits-with-type ordered-commit-types file-nodes-with-commit-type-edits]]
+   [metrics.commits.words :refer [commit-words commit-func-words]]
+   [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
+   [metrics.core :refer [->metric-by ->time-serie cumulative-sum metric->color top-files-list]]
+   [nextjournal.clerk :as clerk]
+   [tick.core :as t]))
 
 ; # Commits
 
@@ -55,7 +54,6 @@
 ^{::clerk/visibility {:result :hide}}
 (def commits
   (->> (:commits log)
-       (filter #(t/< (config :start-time) (:date %)))
        commits-with-type))
 
 #_(->> commits

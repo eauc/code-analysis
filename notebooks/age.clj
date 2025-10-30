@@ -42,8 +42,7 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def line-ages
-  (->> (select-keys file-stats files)
-       vals
+  (->> (vals file-stats)
        (mapv :dates)
        (apply merge-with +)))
 
@@ -58,7 +57,6 @@
 ^{::clerk/visibility {:result :hide}}
 (def file-age-stats
   (-> file-stats
-      (select-keys files)
       (update-vals (comp dates->age-stats :dates))))
 
 ^{::clerk/visibility {:result :hide}}
