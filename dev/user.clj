@@ -9,6 +9,7 @@
 
 (defn serve!
   [& _]
+  (spit ".nrepl-port" "12345")
   (nrepl/start-server :bind "127.0.0.1" :port 12345)
   (prof/serve-ui 8080)
   (clerk/serve!

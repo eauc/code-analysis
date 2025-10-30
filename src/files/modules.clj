@@ -4,7 +4,7 @@
 
 (defn ->modules
   [lst]
-  (map
+  (mapv
    (fn [[name opts]]
      [name (assoc opts :name name)])
    lst))

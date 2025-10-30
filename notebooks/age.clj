@@ -1,84 +1,42 @@
 (ns age
   {:nextjournal.clerk/visibility {:code :hide :result :show}}
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.math :refer [sqrt]]
-            [clojure.string]
-            [files.modules :refer [->modules file-nodes-with-module-config]]
-            [files.tree :refer [files->nodes filter-max-depth]]
-            [graphs.bars :refer [v-bars]]
-            [graphs.trees :refer [tree-plot]]
-            [metrics.age :refer [dates->age-stats file-nodes-with-age-stats]]
-            [metrics.core :refer [->metric blue->red red->green metric->color top-files-list]]
-            [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
-            [nextjournal.clerk :as clerk]
-            [tick.core :as t]))
+  (:require
+   [clojure.math :refer [sqrt]]
+   [clojure.string]
+   [config :as cfg]
+   [data.file-stats]
+   [data.log]
+   [files.modules :refer [file-nodes-with-module-config]]
+   [files.tree :refer [files->nodes filter-max-depth]]
+   [graphs.bars :refer [v-bars]]
+   [graphs.trees :refer [tree-plot]]
+   [metrics.age :refer [dates->age-stats file-nodes-with-age-stats]]
+   [metrics.core :refer [->metric blue->red red->green metric->color top-files-list]]
+   [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
+   [nextjournal.clerk :as clerk]
+   [tick.core :as t]))
 
 ; # Age
 
-(def example
-  "tree-sitter")
+; Project
 
+(def project-name
+  "georges-lib")
+
+; Config
+
+; ^::clerk/no-cache
 (def config
-  (merge
-   {:max-depth 1000
-    :min-complexity 1
-    :since (-> (t/zoned-date-time) (t/<< (t/of-years 10)) t/date)}
-   ({"tree-sitter" {:max-depth 1
-                    :min-complexity 200
-                    :modules (->modules
-                              [[:crates-generate {:match #"^crates/generate/" :max-depth 4}]
-                               [:crates-cli {:match #"^crates/cli/" :max-depth 4}]
-                               [:crates {:match #"^crates/" :max-depth 2}]
-                               [:lib {:match #"^lib/" :max-depth 3}]])}
-     "metabase" {:max-depth 1
-                 :min-complexity 10000
-                 :modules (->modules
-                           [[:frontend {:match #"^frontend/" :max-depth 4}]
-                            [:src {:match #"^src/" :max-depth 2}]
-                            [:entreprise {:match #"^enterprise/" :max-depth 2}]
-                            [:resources {:match #"^resources/" :max-depth 2}]
-                            [:docs {:match #"^docs/" :max-depth 2}]
-                            [:e2e {:match #"^e2e/" :max-depth 2}]
-                            [:test {:match #"^test/" :max-depth 3}]])}
-     "nvim" {:min-complexity 2000
-             :modules (->modules
-                       [[:src-nvim {:match #"^src/nvim/" :max-depth 3}]
-                        [:runtime-doc {:match #"^runtime/doc/" :max-depth 4}]
-                        [:runtime-lua {:match #"^runtime/lua/" :max-depth 4}]
-                        [:runtime {:match #"^runtime/" :max-depth 2}]
-                        [:test {:match #"^test/" :max-depth 3}]])}
-     "zig" {:min-complexity 10000
-            :max-depth 1
-            :modules (->modules
-                      [[:libc-include {:match #"^lib/libc/include/" :max-depth 4}]
-                       [:lib-include {:match #"^lib/include/" :max-depth 3}]
-                       [:lib-std {:match #"^lib/std/" :max-depth 3}]
-                       [:lib {:match #"^lib/" :max-depth 2}]
-                       [:src-codegen {:match #"^src/codegen/" :max-depth 3}]
-                       [:src {:match #"^src/" :max-depth 2}]
-                       [:test {:match #"^test/" :max-depth 2}]])}}
-    example)))
-
-; ### Commits log data
-(def log
-  (edn/read (java.io.PushbackReader. (io/reader (or (config :log-path)
-                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn"))))))
+  (cfg/read! project-name))
 
 ; ### Files stats data
-(def file-stats
-  (edn/read (java.io.PushbackReader. (io/reader (or (config :file-stats-path)
-                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn"))))))
 
-; ### Files
-(def files
-  (->> (keys file-stats)
-       (remove (fn [path]
-                 (some #(re-find % path) (config :exclude-paths))))))
+(def file-stats
+  (data.file-stats/read! config))
 
 ^{::clerk/visibility {:result :hide}}
-(def now
-  (-> (t/date) (t/<< (t/of-months (config :time-stop-months 0)))))
+(def files
+  (keys file-stats))
 
 ; ## Age distribution
 
@@ -91,8 +49,9 @@
 
 (v-bars
  {:data (->> line-ages
-             (group-by (fn [[date _]] (t/between (t/date date) now :months)))
+             (group-by (fn [[date _]] (t/between (t/date date) (config :stop-time) :months)))
              (mapv (fn [[months date-ns]] [months (->metric second date-ns)]))
+             (filterv (fn [[months _]] (< 0 months)))
              (into {}))
   :title "Lines age"})
 
@@ -100,13 +59,12 @@
 (def file-age-stats
   (-> file-stats
       (select-keys files)
-      (update-vals
-       (comp dates->age-stats :dates))))
+      (update-vals (comp dates->age-stats :dates))))
 
 ^{::clerk/visibility {:result :hide}}
 (def metrics
-  [["last modification" #(t/between (:newest %) now :months)]
-   ["lines age p90" #(t/between (:p90 %) now :months)]
+  [["last modification" #(t/between (:newest %) (config :stop-time) :months)]
+   ["lines age p90" #(t/between (:p90 %) (config :stop-time) :months)]
    ["modification range" #(t/between (:oldest %) (:newest %) :months)]])
 
 (->> metrics
@@ -117,6 +75,7 @@
                      vals
                      (remove nil?)
                      (mapv metric)
+                     (filterv #(< 0 %))
                      (frequencies))
           :title (str "Files / " title)}))))
 
@@ -125,7 +84,7 @@
 ^{::clerk/visibility {:result :hide}}
 (def base-nodes
   (->> files
-       (files->nodes example)
+       (files->nodes project-name)
        (file-nodes-with-module-config (config :modules))
        (filter-max-depth (config :max-depth))
        (file-nodes-with-complexity file-stats)
@@ -135,20 +94,20 @@
 ^{::clerk/visibility {:result :hide}}
 (def metrics
   [["Last modification"
-    #(t/between (-> % :age :newest) now :days)
-    #(str (t/<< now (t/of-days %)) " (" % " days)")
+    #(t/between (-> % :age :newest) (config :stop-time) :days)
+    #(str (t/<< (config :stop-time) (t/of-days %)) " (" % " days)")
     blue->red]
    ["p90 age"
-    #(t/between (-> % :age :p90) now :days)
-    #(str (t/<< now (t/of-days %)) " (" % " days)")
+    #(t/between (-> % :age :p90) (config :stop-time) :days)
+    #(str (t/<< (config :stop-time) (t/of-days %)) " (" % " days)")
     blue->red]
    ; ["Median age"
-   ;  #(t/between (-> % :age :median) now :days)
-   ;  #(str (t/<< now (t/of-days %)) " (" % " days)")
+   ;  #(t/between (-> % :age :median) (config :stop-time) :days)
+   ;  #(str (t/<< (config :stop-time) (t/of-days %)) " (" % " days)")
    ;  blue->red]
    ["Creation date"
-    #(t/between (-> % :age :oldest) now :days)
-    #(str (t/<< now (t/of-days %)) " (" % " days)")
+    #(t/between (-> % :age :oldest) (config :stop-time) :days)
+    #(str (t/<< (config :stop-time) (t/of-days %)) " (" % " days)")
     blue->red]
    ["Modification range"
     #(t/between (-> % :age :oldest) (-> % :age :newest) :days)

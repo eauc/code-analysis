@@ -1,94 +1,60 @@
 (ns changes
   {:nextjournal.clerk/visibility {:code :hide :result :show}}
-  (:require [clojure.edn :as edn]
-            [clojure.java.io :as io]
-            [clojure.string]
-            [files.deltas :refer [deltas-join-commits filter-since]]
-            [files.modules :refer [->modules file-nodes-with-module-config]]
-            [files.tree :refer [files->nodes filter-max-depth]]
-            [graphs.trees :refer [tree-plot]]
-            [metrics.changes :refer [file-nodes-with-changes]]
-            [metrics.core :refer [metric->color top-files-list metric->str]]
-            [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
-            [nextjournal.clerk :as clerk]
-            [tick.core :as t]))
+  (:require
+   [clojure.string]
+   [config :as cfg]
+   [data.file-stats]
+   [data.log]
+   [files.deltas :refer [deltas-join-commits filter-since]]
+   [files.modules :refer [file-nodes-with-module-config]]
+   [files.tree :refer [files->nodes filter-max-depth]]
+   [graphs.trees :refer [tree-plot]]
+   [metrics.changes :refer [file-nodes-with-changes]]
+   [metrics.core :refer [metric->color top-files-list metric->str]]
+   [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
+   [nextjournal.clerk :as clerk]))
 
 ; # Changes
 
-(def example
-  "tree-sitter")
+; Project
 
+(def project-name
+  "georges-lib")
+
+; Config
+
+; ^::clerk/no-cache
 (def config
-  (merge
-   {:max-depth 1000
-    :min-complexity 1
-    :since (-> (t/zoned-date-time) (t/<< (t/of-years 10)) t/date)}
-   ({"tree-sitter" {:max-depth 1
-                    :min-complexity 200
-                    :modules (->modules
-                              [[:crates-generate {:match #"^crates/generate/" :max-depth 4}]
-                               [:crates-cli {:match #"^crates/cli/" :max-depth 4}]
-                               [:crates {:match #"^crates/" :max-depth 2}]
-                               [:lib {:match #"^lib/" :max-depth 3}]])}
-     "metabase" {:max-depth 1
-                 :min-complexity 10000
-                 :modules (->modules
-                           [[:frontend {:match #"^frontend/" :max-depth 4}]
-                            [:src {:match #"^src/" :max-depth 2}]
-                            [:entreprise {:match #"^enterprise/" :max-depth 2}]
-                            [:resources {:match #"^resources/" :max-depth 2}]
-                            [:docs {:match #"^docs/" :max-depth 2}]
-                            [:e2e {:match #"^e2e/" :max-depth 2}]
-                            [:test {:match #"^test/" :max-depth 3}]])}
-     "nvim" {:min-complexity 2000
-             :modules (->modules
-                       [[:src-nvim {:match #"^src/nvim/" :max-depth 3}]
-                        [:runtime-doc {:match #"^runtime/doc/" :max-depth 4}]
-                        [:runtime-lua {:match #"^runtime/lua/" :max-depth 4}]
-                        [:runtime {:match #"^runtime/" :max-depth 2}]
-                        [:test {:match #"^test/" :max-depth 3}]])}
-     "zig" {:min-complexity 10000
-            :max-depth 1
-            :modules (->modules
-                      [[:libc-include {:match #"^lib/libc/include/" :max-depth 4}]
-                       [:lib-include {:match #"^lib/include/" :max-depth 3}]
-                       [:lib-std {:match #"^lib/std/" :max-depth 3}]
-                       [:lib {:match #"^lib/" :max-depth 2}]
-                       [:src-codegen {:match #"^src/codegen/" :max-depth 3}]
-                       [:src {:match #"^src/" :max-depth 2}]
-                       [:test {:match #"^test/" :max-depth 2}]])}}
-    example)))
+  (cfg/read! project-name))
 
 ; ### Commits log data
+
 (def log
-  (edn/read (java.io.PushbackReader. (io/reader (or (config :log-path)
-                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/log.edn"))))))
+  (data.log/read! config))
 
 ; ### Files stats data
+
 (def file-stats
-  (edn/read (java.io.PushbackReader. (io/reader (or (config :file-stats-path)
-                                                    (str "/home/manu/code/perso/code_analysis/code_analysis/examples/" example "/file_stats.edn"))))))
+  (data.file-stats/read! config))
 
 ; ### Files
+
+^{::clerk/visibility {:result :hide}}
 (def files
-  (->> (keys file-stats)
-       (remove (fn [path]
-                 (some #(re-find % path) (config :exclude-paths))))))
+  (keys file-stats))
 
 ^{::clerk/visibility {:result :hide}}
 (def commits
   (->> (:commits log)
-       (mapv #(update % :date (comp t/date t/instant)))
        (map #(vector (:hash %) %))
        (into {})))
 
-^{::clerk/visibility {:result :hide}}
+; ^{::clerk/visibility {:result :hide}}
 (def file-deltas
   (-> (:file-deltas log)
-      (select-keys files)
       (update-vals #(->> %
                          (deltas-join-commits [:date] commits)
-                         (filter-since (config :since))))))
+                         (filter-since (config :start-time))))))
 
 ^{::clerk/visibility {:result :hide}}
 (def metrics
@@ -97,7 +63,7 @@
 ^{::clerk/visibility {:result :hide}}
 (def base-nodes
   (->> files
-       (files->nodes example)
+       (files->nodes project-name)
        (file-nodes-with-module-config (config :modules))
        (filter-max-depth (config :max-depth))
        (file-nodes-with-complexity file-stats)
