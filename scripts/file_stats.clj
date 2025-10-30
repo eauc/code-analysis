@@ -15,7 +15,7 @@
    [tick.core :as t]
    [utils.core :refer [sum-by count-by]]))
 
-(def force
+(def force?
   false)
 
 (def path-filter
@@ -83,7 +83,7 @@
           result data]
      (if-not f
        result
-       (if (and (not force) (get result f))
+       (if (and (not force?) (get result f))
          (do
            (debug (str i "/" total-count) f "-- cached")
            (recur rest (inc i) result))
