@@ -10,8 +10,8 @@
    [files.tree :refer [files->nodes filter-max-depth]]
    [graphs.bars :refer [v-bars]]
    [graphs.trees :refer [tree-plot]]
-   [metrics.age :refer [dates->age-stats file-nodes-with-age-stats]]
-   [metrics.core :refer [->metric blue->red red->green metric->color top-files-list]]
+   [metrics.age :refer [->line-ages dates->age-stats file-nodes-with-age-stats]]
+   [metrics.core :refer [blue->red red->green metric->color top-files-list]]
    [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
    [nextjournal.clerk :as clerk]
    [tick.core :as t]))
@@ -42,16 +42,10 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def line-ages
-  (->> (vals file-stats)
-       (mapv :dates)
-       (apply merge-with +)))
+  (->line-ages config file-stats))
 
 (v-bars
- {:data (->> line-ages
-             (group-by (fn [[date _]] (t/between (t/date date) (config :stop-time) :months)))
-             (mapv (fn [[months date-ns]] [months (->metric second date-ns)]))
-             (filterv (fn [[months _]] (< 0 months)))
-             (into {}))
+ {:data line-ages
   :title "Lines age"})
 
 ^{::clerk/visibility {:result :hide}}

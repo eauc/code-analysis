@@ -70,6 +70,19 @@
                  [path (dissoc file-couplings path)]))
          (into {}))))
 
+(defn ->single-coupling-factors
+  [commits file-deltas file-path]
+  (let [hashes (->> commits (map :hash) set)
+        coupled-file-deltas (-> file-deltas
+                                (update-vals (fn [deltas]
+                                               (filterv (comp hashes :hash) deltas))))
+        coupling-counts (->> coupled-file-deltas
+                             (filterv (comp seq second))
+                             (mapv (fn [[path deltas]] [path (count deltas)]))
+                             (into {}))
+        total-modifications-count (count commits)]
+    {file-path (update-vals coupling-counts #(double (/ % total-modifications-count)))}))
+
 (defn coupling-factors->deps
   [coupling-factors]
   (->> coupling-factors
@@ -87,11 +100,15 @@
        ; (filterv (fn [{:keys [value]}] (< 0.5 value)))))
 
 (defn ->coupling-tree
-  [files module-paths]
-  (->> files
-       (files->nodes ".")
-       (filter-paths module-paths)
-       (concat [{:path "."}])))
+  ([files module-paths]
+   (->> files
+        (files->nodes ".")
+        (filter-paths module-paths)
+        (concat [{:path "."}])))
+  ([files]
+   (->> files
+        (files->nodes ".")
+        (concat [{:path "."}]))))
 
 (defn ->coupling-scores
   [hash->files file-deltas]

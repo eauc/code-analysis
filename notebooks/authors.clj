@@ -13,7 +13,7 @@
    [graphs.plots :refer [plots]]
    [graphs.trees :refer [tree-plot]]
    [metrics.core :refer [->metric-by ->time-serie cumulative-sum bottom-files-list top-files-list]]
-   [metrics.authors :refer [email->author ->authors-stats file-nodes-with-author]]
+   [metrics.authors :refer [->file-authors ->authors-stats file-nodes-with-author]]
    [metrics.bus-factor :refer [file-nodes-with-bus-factor bus-factor->color]]
    [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
    [nextjournal.clerk :as clerk]))
@@ -98,13 +98,8 @@
 
 ^{::clerk/visibility {:result :hide}}
 (def top-authors
-  (->> (select-keys file-stats files)
-       (mapv (comp :authors second))
-       (apply merge-with +)
-       (sort-by #(- (second %)))
-       (take 10)
-       (mapv (fn [[email n-lines]]
-               [(email->author email authors) n-lines]))))
+  (->> (->file-authors authors file-stats)
+       (take 20)))
 
 ^{::clerk/visibility {:result :hide}}
 (def author->color

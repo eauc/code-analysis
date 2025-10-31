@@ -78,9 +78,7 @@
  {:data {:tree coupling-tree
          :deps coupling-deps}
   :id :path
-  :label :path
-  :width 700
-  :height 700})
+  :label :path})
 
 ; ## Coupling hotspot map
 

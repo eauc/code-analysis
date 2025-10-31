@@ -12,24 +12,27 @@
   [authors commits]
   (->> authors
        (mapv (fn [[email _]]
-              (let [commits (->> commits (filterv #(= email (:author %))))]
-                {:author (email->author email authors)
-                 :email email
-                 :added (sum-by :added commits)
-                 :deleted (sum-by :deleted commits)
-                 :edits (sum-by :edits commits)
-                 :diff (sum-by :diff commits)
-                 :churn (sum-by :churn commits)
-                 :first-contrib (->> commits (mapv :date) (reduce min-date) str)
-                 :last-contrib (->> commits (mapv :date) (reduce max-date) str)})))
+               (let [commits (->> commits (filterv #(= email (:author %))))]
+                 {:author (email->author email authors)
+                  :email email
+                  :added (sum-by :added commits)
+                  :deleted (sum-by :deleted commits)
+                  :edits (sum-by :edits commits)
+                  :diff (sum-by :diff commits)
+                  :churn (sum-by :churn commits)
+                  :first-contrib (->> commits (mapv :date) (reduce min-date) str)
+                  :last-contrib (->> commits (mapv :date) (reduce max-date) str)})))
        (sort-by :edits)
        reverse))
 
 (defn ->file-authors
-  [files file-stats]
-  (->> files
-       (mapv (fn [path] [path (get-in file-stats [path :authors])]))
-       (into {})))
+  [authors file-stats]
+  (->> file-stats
+       (mapv (comp :authors second))
+       (apply merge-with +)
+       (sort-by #(- (second %)))
+       (mapv (fn [[email n-lines]]
+               [(email->author email authors) n-lines]))))
 
 (defn path-author
   [path file-authors]
@@ -45,10 +48,10 @@
   [authors file-stats file-nodes]
   (->> file-nodes
        (mapv (fn [{:keys [leaves] :as node}]
-              (let [email (->> leaves
-                               (mapv (comp :authors file-stats))
-                               (apply merge-with +)
-                               (sort-by #(- (second %)))
-                               first
-                               first)]
-                (assoc node :author (email->author email authors)))))))
+               (let [email (->> leaves
+                                (mapv (comp :authors file-stats))
+                                (apply merge-with +)
+                                (sort-by #(- (second %)))
+                                first
+                                first)]
+                 (assoc node :author (email->author email authors)))))))

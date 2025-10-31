@@ -12,7 +12,7 @@
    [graphs.plots :refer [plots]]
    [graphs.trees :refer [tree-plot]]
    [metrics.commits.types :refer [commit-type->color commits-with-type ordered-commit-types file-nodes-with-commit-type-edits]]
-   [metrics.commits.words :refer [commit-words commit-func-words]]
+   [metrics.commits.words :refer [->word-frequencies ->func-word-frequencies]]
    [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
    [metrics.core :refer [->metric-by ->time-serie cumulative-sum metric->color top-files-list]]
    [nextjournal.clerk :as clerk]))
@@ -129,21 +129,9 @@
 ; All words from commit descriptions
 
 (tree-plot
- {:nodes (->> commits
-              commit-words
-              (->metric-by (constantly 1) clojure.string/lower-case)
-              (sort-by second)
-              reverse
-              (take 30)
-              (mapv (fn [[word count]] {:id word :parent "word-map" :value count})))})
+ {:nodes (->word-frequencies commits)})
 
 ; Functional words from commit descriptions
 
 (tree-plot
- {:nodes (->> commits
-              commit-func-words
-              (->metric-by (constantly 1) clojure.string/lower-case)
-              (sort-by second)
-              reverse
-              (take 30)
-              (mapv (fn [[word count]] {:id word :parent "word-map" :value count})))})
+ {:nodes (->func-word-frequencies commits)})

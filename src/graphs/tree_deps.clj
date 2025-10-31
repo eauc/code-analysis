@@ -46,11 +46,13 @@
 
 (defn tree-marks
   [{label-k :label
-    :or {label-k :label}
+    labels? :labels?
+    :or {label-k :label
+         labels? :nodes}
     :as opts}
    _]
   [{:type :text
-    :from {:data :tree}
+    :from {:data (if (= labels? :leaves) :leaves :tree)}
     :encode {:enter {:text {:field label-k}
                      :baseline {:value :middle}}
              :update {:x {:field :x}

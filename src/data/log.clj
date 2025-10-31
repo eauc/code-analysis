@@ -45,7 +45,7 @@
                     (group-by :hash))]
     (update-vals groups deltas->change-stats)))
 
-(defn- project-commits
+(defn project-commits
   [file-deltas commits]
   (let [hash->change-stats (hash->change-stats file-deltas)
         hashes (-> hash->change-stats keys set)]

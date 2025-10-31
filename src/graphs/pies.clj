@@ -5,14 +5,14 @@
 
 (defn pie-data
   [{:keys [data order colors]}]
-  (let [order (or order (keys data))
-        values (mapv data order)]
+  (let [order' (or order (keys data))
+        values (mapv data order')]
     (merge {:type :pie
             :values values
-            :labels order
+            :labels order'
             :sort (not order)}
            (when colors
-             {:marker {:colors (mapv colors order)}}))))
+             {:marker {:colors (mapv colors order')}}))))
 
 (defn pie
   [{:keys [title]

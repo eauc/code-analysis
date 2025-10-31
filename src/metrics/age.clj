@@ -1,5 +1,17 @@
 (ns metrics.age
-  (:require [tick.core :as t]))
+  (:require
+   [metrics.core :refer [->metric]]
+   [tick.core :as t]))
+
+(defn ->line-ages
+  [config file-stats]
+  (->> (vals file-stats)
+       (mapv :dates)
+       (apply merge-with +)
+       (group-by (fn [[date _]] (t/between (t/date date) (config :stop-time) :months)))
+       (mapv (fn [[months date-ns]] [months (->metric second date-ns)]))
+       (filterv (fn [[months _]] (< 0 months)))
+       (into {})))
 
 (defn dates->age-stats
   [dates]
