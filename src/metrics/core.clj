@@ -42,6 +42,16 @@
    (- 1.0 (abs (* 2.0 (- 0.5 s)))),
    (+ 0.15 (* 0.45 s))])
 
+(defn rgb->str
+  [r g b]
+  (str "rgb("
+       (int (* 255 r))
+       " , "
+       (int (* 255 g))
+       ", "
+       (int (* 255 b))
+       ")"))
+
 (defn metric->color
   ([metric data s->rgb]
    (let [v-range (->> data (mapv (comp sqrt metric)) (remove nil?))
@@ -51,13 +61,7 @@
        (let [v (-> item metric sqrt (or v-min))
              s (/ (double (- v v-min)) (- v-max v-min))
              [r g b] (s->rgb s)]
-         (str "rgb("
-              (int (* 255 r))
-              " , "
-              (int (* 255 g))
-              ", "
-              (int (* 255 b))
-              ")")))))
+         (rgb->str r g b)))))
   ([metric data]
    (metric->color metric data red->green)))
 
@@ -71,6 +75,20 @@
         top-files (->> file-nodes
                        (remove #(parents (:path %)))
                        (sort-by #(- (metric %)))
+                       (take 10)
+                       (mapv (juxt :path metric)))]
+    [:ul
+     (map
+      (fn [[path value]]
+        [:li (str path " (" (metric->str value) ")")])
+      top-files)]))
+
+(defn bottom-files-list
+  [metric file-nodes]
+  (let [parents (->> file-nodes (map :parent) set)
+        top-files (->> file-nodes
+                       (remove #(parents (:path %)))
+                       (sort-by #(metric %))
                        (take 10)
                        (mapv (juxt :path metric)))]
     [:ul

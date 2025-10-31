@@ -22,7 +22,7 @@
 ; Project
 
 (def project-name
-  "georges")
+  "tree-sitter")
 
 ; Config
 
@@ -147,7 +147,3 @@
               reverse
               (take 30)
               (mapv (fn [[word count]] {:id word :parent "word-map" :value count})))})
-
-; TODO commits size analysis / edits added deleted churn
-; cum over time, distribution
-; by authors

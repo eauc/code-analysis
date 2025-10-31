@@ -44,7 +44,6 @@
   [file-deltas module-paths]
   (let [files (keys file-deltas)
         hash->files (hash->files file-deltas)
-        _ (prn hash->files)
         file->module-path (file->module-path files module-paths)]
     (->> module-paths
          (mapv (fn [module-path]

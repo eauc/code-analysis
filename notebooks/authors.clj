@@ -4,7 +4,7 @@
    [clojure.string]
    [config :as cfg]
    [data.file-stats]
-   [data.log] 
+   [data.log]
    [files.modules :refer [file-nodes-with-module-config]]
    [files.tree :refer [files->nodes filter-max-depth]]
    [graphs.bars :refer [h-bars]]
@@ -12,8 +12,9 @@
    [graphs.pies :refer [pie]]
    [graphs.plots :refer [plots]]
    [graphs.trees :refer [tree-plot]]
-   [metrics.core :refer [->metric-by ->time-serie cumulative-sum]]
+   [metrics.core :refer [->metric-by ->time-serie cumulative-sum bottom-files-list top-files-list]]
    [metrics.authors :refer [email->author ->authors-stats file-nodes-with-author]]
+   [metrics.bus-factor :refer [file-nodes-with-bus-factor bus-factor->color]]
    [metrics.complexity :refer [file-nodes-with-complexity filter-min-complexity complexity->tree-plot-value]]
    [nextjournal.clerk :as clerk]))
 
@@ -122,7 +123,8 @@
        (filter-max-depth (config :max-depth))
        (file-nodes-with-complexity file-stats)
        (filter-min-complexity :lines (config :min-complexity))
-       (file-nodes-with-author authors file-stats)))
+       (file-nodes-with-author authors file-stats)
+       (file-nodes-with-bus-factor file-stats)))
 
 (tree-plot
  {:type :treemap
@@ -134,4 +136,21 @@
   :value (complexity->tree-plot-value nodes)
   :max-depth -1})
 
-; TODO bus factor treemap
+; ## Bus Factor
+
+(clerk/html
+ [:div
+  [:p "Worst bus factor files:"]
+  (bottom-files-list :bus-factor nodes)
+  (top-files-list :bus-factor nodes)])
+
+(tree-plot
+ {:type :treemap
+  :nodes nodes
+  :id :path
+  :color bus-factor->color
+  :label (fn [{:keys [depth path bus-factor]}]
+           (str depth " - " path "<br />" bus-factor))
+  :value (complexity->tree-plot-value nodes)
+  :max-depth -1})
+
