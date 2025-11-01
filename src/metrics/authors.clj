@@ -6,7 +6,7 @@
 
 (defn email->author
   [email authors]
-  (-> email authors first))
+  (-> email authors (or [email]) first))
 
 (defn ->authors-stats
   [authors commits]
@@ -55,3 +55,15 @@
                                 first
                                 first)]
                  (assoc node :author (email->author email authors)))))))
+
+(defn file-nodes-with-author-ratio
+  [author-email file-stats file-nodes]
+  (->> file-nodes
+       (mapv (fn [{:keys [leaves] :as node}]
+               (let [total-lines (->> leaves
+                                      (map (comp :lines :complexity file-stats))
+                                      (reduce +))
+                     author-lines (->> leaves
+                                       (map #(get-in file-stats [% :authors author-email] 0))
+                                       (reduce +))]
+                 (assoc node :author-ratio (double (/ author-lines total-lines))))))))

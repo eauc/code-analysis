@@ -32,6 +32,10 @@
         add (if multi? #(merge-with + %1 %2) +)]
     (mapv vector x (reductions add y))))
 
+(defn white->blue
+  [s]
+  [(- 1 s) (- 1 s) 1])
+
 (defn red->green
   [s]
   [s, (- 1.0 s), 0])

@@ -151,7 +151,7 @@
           (->> coupling-deps
                (take 20)
                (map (fn [{:keys [source target value]}]
-                      [source target value]))
+                      [file-path (if (= target file-path) source target) value]))
                (sort-by (juxt #(- (nth % 2)) first second))))))
 
 (tree-deps-plot
