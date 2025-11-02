@@ -2,35 +2,16 @@
   (:require
    [clojure.edn :as edn]
    [clojure.java.io :as io]
+   [config :refer [filter-files-map]]
    [tick.core :as t]))
 
 (defn- project-file-deltas
-  [{:keys [root filter-paths exclude-paths] :as _config} commits file-deltas]
+  [config commits file-deltas]
   (let [hashes (->> commits (map :hash) set)]
-    (cond->> file-deltas
-      :always
-      (filterv (fn [[path _]]
-                 (re-find root path)))
-
-      :always
-      (map (fn [[path v]]
-             (let [root-prefix (re-find root path)]
-               [(subs path (count root-prefix)) v])))
-
-      (seq filter-paths)
-      (filterv (fn [[path _]]
-                 (some #(re-find % path) filter-paths)))
-
-      (seq exclude-paths)
-      (remove (fn [[path _]]
-                (some #(re-find % path) exclude-paths)))
-
-      :always
-      (mapv (fn [[path deltas]]
-              [path (filterv (comp hashes :hash) deltas)]))
-
-      :always
-      (into {}))))
+    (->> (filter-files-map config file-deltas)
+         (mapv (fn [[path deltas]]
+                 [path (filterv (comp hashes :hash) deltas)]))
+         (into {}))))
 
 (defn- deltas->change-stats
   [deltas]

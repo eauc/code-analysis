@@ -1,30 +1,12 @@
 (ns data.file-stats
   (:require
    [clojure.edn :as edn]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [config :refer [filter-files-map]]))
 
 (defn project-file-stats
-  [{:keys [root filter-paths exclude-paths] :as _config} file-stats]
-  (cond->> file-stats
-    :always
-    (filterv (fn [[path _]]
-               (re-find root path)))
-
-    :always
-    (map (fn [[path v]]
-           (let [root-prefix (re-find root path)]
-             [(subs path (count root-prefix)) v])))
-
-    (seq filter-paths)
-    (filter (fn [[path _]]
-              (some #(re-find % path) filter-paths)))
-
-    (seq exclude-paths)
-    (remove (fn [[path _]]
-              (some #(re-find % path) exclude-paths)))
-
-    :always
-    (into {})))
+  [config file-stats]
+  (filter-files-map config file-stats))
 
 (defn read!
   [config]

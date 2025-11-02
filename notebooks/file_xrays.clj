@@ -4,6 +4,7 @@
    [config :as cfg]
    [data.file-stats]
    [data.log :refer [project-commits]]
+   [data.words]
    [graphs.bars :refer [v-bars]]
    [graphs.pies :refer [pie]]
    [graphs.plots :refer [plots]]
@@ -15,6 +16,7 @@
    [metrics.commits.words :refer [->func-word-frequencies]]
    [metrics.core :refer [->metric-by ->time-serie cumulative-sum]]
    [metrics.coupling :refer [->single-coupling-factors coupling-factors->deps ->coupling-tree]]
+   [metrics.words :refer [->word-ratios ->identifier-stats ->value-stats]]
    [nextjournal.clerk :as clerk]))
 
 ; # File X-Rays
@@ -44,6 +46,19 @@
 
 (def file-stats
   (-> (data.file-stats/read! config)
+      (select-keys [file-path])))
+
+; ### File nodes data
+
+(def words
+  (data.words/read! config))
+
+(def identifiers
+  (-> (words :identifiers)
+      (select-keys [file-path])))
+
+(def values
+  (-> (words :values)
       (select-keys [file-path])))
 
 ^{::clerk/visibility {:result :hide}}
@@ -121,12 +136,45 @@
       :title (str name " / type over time")
       :stacked? true})]))
 
-; ## Commits descriptions
+; ## Vocabulary
 
 ; Functional words from commit descriptions
 
 (tree-plot
  {:nodes (->func-word-frequencies commits)})
+
+; Identifiers
+
+(pie
+ {:data (->word-ratios file-stats {:identifiers identifiers :values values})})
+
+^{::clerk/visibility {:result :hide}}
+(def top-identifiers
+  (->> identifiers
+       (remove (fn [[path _]]
+                 (some #(re-find % path) (config :test-paths))))
+       (->identifier-stats config)
+       (take 100)))
+
+(tree-plot
+ {:nodes (->> top-identifiers
+              (mapv (fn [[name count]]
+                      {:id name :parent "identifiers-map" :value count})))})
+
+; Values
+
+^{::clerk/visibility {:result :hide}}
+(def top-values
+  (->> values
+       (remove (fn [[path _]]
+                 (some #(re-find % path) (config :test-paths))))
+       ->value-stats
+       (take 100)))
+
+(tree-plot
+ {:nodes (->> top-values
+              (mapv (fn [[name count]]
+                      {:id name :parent "values-map" :value count})))})
 
 ; ## Couplings
 

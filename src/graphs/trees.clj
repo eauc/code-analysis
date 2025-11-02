@@ -10,7 +10,7 @@
           color-k :color
           :keys [type max-depth]
           :or {type :treemap
-               max-depth 3
+               max-depth -1
                id-k :id
                value-k :value
                label-k :id

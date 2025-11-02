@@ -26,6 +26,10 @@
   (binding [*out* *err*]
     (apply println args)))
 
+(defn count-chars
+  [l]
+  (count (remove #{\newline \space \tab \formfeed \backspace \return} l)))
+
 (defn count-indents
   [l]
   (let [[_ indent] (re-matches #"^(\s*).*$" l)]
@@ -93,12 +97,14 @@
                             :out str/split-lines
                             (remove empty?)
                             (mapv parse-blame-line))
+                 chars (sum-by (comp count-chars :content) lines)
                  indents (sum-by (comp count-indents :content) lines)
                  parens (sum-by (comp count-parens :content) lines)
                  indent-parens (sum-by (comp #(* (count-indents %) (count-parens %)) :content) lines)
                  authors (count-by :email lines)
                  dates (count-by (comp str t/date parse-date) lines)
-                 file-stats {:complexity {:lines (-> lines count)
+                 file-stats {:complexity {:chars chars
+                                          :lines (-> lines count)
                                           :indents indents
                                           :parens parens
                                           :indent-parens indent-parens}
