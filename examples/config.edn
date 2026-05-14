@@ -1,0 +1,193 @@
+{"georges" {:log-path "/home/manu/code/work/georges/georges/log.edn"
+            :file-stats-path "/home/manu/code/work/georges/georges/file_stats.edn"
+            :words-path "/home/manu/code/work/georges/georges/words.edn"
+            :stop-time #inst/date "2025-03-31"
+            :exclude-paths [#pattern "^package.*\\.json$"
+                            #pattern "^pnpm-lock.yaml$"
+                            #pattern "generated-client-types"
+                            #pattern "/test/"]
+            :test-paths [#pattern "/test/"
+                         #pattern "__tests?__"
+                         #pattern "\\.(test|spec)\\."]
+            :exclude-identifiers #{"_" "require" "module" "exports" "describe" "it" "expect" "to" "eql" "toEqual"}
+            :min-complexity 10000
+            :modules #modules
+                      [[:server-modules {:match #pattern "^packages/server/src/modules/[^/]+/" :max-depth 5}]
+                       [:server-test {:match #pattern "^packages/server/test/[^/]+/" :max-depth 4}]
+                       [:server {:match #pattern "^packages/server/[^/]+/" :max-depth 4}]
+                       [:client-modules {:match #pattern "^packages/client/src/modules/[^/]+/" :max-depth 5}]
+                       [:client {:match #pattern "^packages/client/[^/]+/" :max-depth 4}]
+                       [:packages {:match #pattern "^packages/[^/]+/" :max-depth 3}]
+                       [:misc {:match #pattern "^.+"}]]}
+ "georges-client" {:log-path "/home/manu/code/work/georges/georges/log.edn"
+                   :file-stats-path "/home/manu/code/work/georges/georges/file_stats.edn"
+                   :stop-time #inst/date "2025-03-31"
+                   :root #pattern "^packages/client/"
+                   :exclude-paths [#pattern "generated"
+                                   #pattern "^package.*\\.json$"
+                                   #pattern "^pnpm-lock.yaml$"]
+                   :max-depth 5
+                   :min-complexity 3000
+                   :modules #modules
+                             []}
+ "georges-server" {:log-path "/home/manu/code/work/georges/georges/log.edn"
+                   :file-stats-path "/home/manu/code/work/georges/georges/file_stats.edn"
+                   :stop-time #inst/date "2025-03-31"
+                   :root #pattern "^packages/server/"
+                   :exclude-paths [#pattern "generated"
+                                   #pattern "^package.*\\.json$"
+                                   #pattern "^pnpm-lock.yaml$"]
+                   :max-depth 5
+                   :min-complexity 5000
+                   :modules #modules
+                             []}
+ "georgette" {:log-path "/home/manu/code/work/georges/georges/log.edn"
+              :file-stats-path "/home/manu/code/work/georges/georges/file_stats.edn"
+              :words-path "/home/manu/code/work/georges/georges/words.edn"
+              :stop-time #inst/date "2025-03-31"
+              :root #pattern "^packages/georgette/"
+              :exclude-paths [#pattern "^package.*\\.json$"
+                              #pattern "^pnpm-lock.yaml$"]
+              :test-paths [#pattern "^test/"]
+              :exclude-identifiers #{"_" "it" "to"}
+              :max-depth 5
+              :min-complexity 1000
+              :modules #modules
+                        [[:declarations {:match #pattern "^server/api/exports/declarations/[^/]+/"}]
+                         [:declarations {:match #pattern "^server/api/exports/declarations/"}]
+                         [:exports {:match #pattern "^server/api/exports/[^/]+/"}]
+                         [:exports {:match #pattern "^server/api/exports/"}]
+                         [:assets {:match #pattern "^server/assets/"}]
+                         [:server {:match #pattern "^server/"}]
+                         [:test-exports {:match #pattern "^test/api/exports/[^/]+/" :max-depth 6}]
+                         [:test-api {:match #pattern "^test/api/[^/]+/" :max-depth 6}]
+                         [:test {:match #pattern "^test/" :max-depth 6}]]}
+ "georges-accounting" {:log-path "/home/manu/code/work/georges/georges/log.edn"
+                       :file-stats-path "/home/manu/code/work/georges/georges/file_stats.edn"
+                       :words-path "/home/manu/code/work/georges/georges/words.edn"
+                       :stop-time #inst/date "2025-03-31"
+                       :root #pattern "^packages/accounting/"
+                       :exclude-paths [#pattern "^doc/"
+                                       #pattern "generated"
+                                       #pattern "^package.*\\.json$"
+                                       #pattern "^pnpm-lock.yaml$"]
+                       :test-paths [#pattern "^test/"]
+                       :exclude-identifiers #{"_" "require" "module" "exports" "describe" "it" "expect" "to" "eql"}
+                       :min-complexity 100
+                       :modules #modules
+                                 [[:test-unit {:match #pattern "^test/unit/[^/]+/" :max-depth 4}]
+                                  [:test-unit {:match #pattern "^test/unit/" :max-depth 4}]
+                                  [:test-int {:match #pattern "^test/int/[^/]+/" :max-depth 4}]
+                                  [:test-int {:match #pattern "^test/int/" :max-depth 4}]
+                                  [:test-e2e {:match #pattern "^test/e2e/[^/]+/" :max-depth 4}]
+                                  [:test-e2e {:match #pattern "^test/e2e/" :max-depth 4}]
+                                  [:test-types {:match #pattern "^test/types/" :max-depth 3}]
+                                  [:lib {:match #pattern "^lib/[^/]+/" :max-depth 3}]
+                                  [:lib {:match #pattern "^lib/" :max-depth 3}]]}
+ "georges-lib" {:log-path "/home/manu/code/work/georges/georges/log.edn"
+                :file-stats-path "/home/manu/code/work/georges/georges/file_stats.edn"
+                :stop-time #inst/date "2025-03-31"
+                :root #pattern "^packages/georges-lib/"
+                :exclude-paths [#pattern "^doc/"
+                                #pattern "^package.*\\.json$"
+                                #pattern "^pnpm-lock.yaml$"]
+                :min-complexity 150
+                :max-depth 4
+                :modules #modules
+                          [[:test {:match #pattern "^tests/[^/]+/?"}]
+                           [:test {:match #pattern "^tests/"}]
+                           [:lib {:match #pattern "^src/[^/]+/"}]
+                           [:lib {:match #pattern "^src/"}]]}
+ "georges-usa" {:log-path "/home/manu/code/work/georges/usa/log.edn"
+                :file-stats-path "/home/manu/code/work/georges/usa/file_stats.edn"
+                :words-path "/home/manu/code/work/georges/usa/words.edn"
+                :stop-time #inst/date "2023-03-10"
+                :exclude-paths [#pattern "^package.*\\.json$"]
+                :test-paths [#pattern "/test/"
+                             #pattern "__tests__"
+                             #pattern "\\.spec\\."]
+                :min-complexity 500
+                :modules #modules
+                          [[:server-modules {:match #pattern "^apps/server/src/modules/" :max-depth 5}]
+                           [:server {:match #pattern "^apps/server/[^/]+/" :max-depth 4}]
+                           [:client-public {:match #pattern "^apps/client/public/[^/]+/" :max-depth 4}]
+                           [:client-modules {:match #pattern "^apps/client/src/modules/" :max-depth 5}]
+                           [:client {:match #pattern "^apps/client/src/[^/]+/" :max-depth 4}]
+                           [:apps {:match #pattern "^apps/[^/]+/?"}]
+                           [:packages {:match #pattern "^packages/[^/]+/" :max-depth 2}]]}
+ "metabase" {:max-depth 1
+             :min-complexity 10000
+             :exclude-paths [#pattern "^locales/"
+                             #pattern "^yarn.lock$"]
+             :modules #modules
+                       [[:frontend {:match #pattern "^frontend/[^/]+/" :max-depth 4}]
+                        [:src {:match #pattern "^src/metabase/" :max-depth 2}]
+                        [:entreprise {:match #pattern "^enterprise/[^/]+/" :max-depth 2}]
+                        [:resources {:match #pattern "^resources/[^/]+/" :max-depth 2}]
+                        [:docs {:match #pattern "^docs/" :max-depth 2}]
+                        [:e2e {:match #pattern "^e2e/[^/]+/" :max-depth 2}]
+                        [:test {:match #pattern "^test/[^/]+/?" :max-depth 3}]
+                        [:dev {:match #pattern "^dev/"}]
+                        [:modules {:match #pattern "^modules/"}]
+                        [:test-modules {:match #pattern "^test_modules/"}]
+                        [:patches {:match #pattern "^patches/"}]
+                        [:release {:match #pattern "^release/"}]
+                        [:util {:match #pattern "^util/"}]
+                        [:misc {:match #pattern "^[^./][^/]*/"}]]}
+ "nvim" {:max-depth 1
+         :min-complexity 3000
+         :modules #modules
+                   [[:src-nvim {:match #pattern "^src/nvim/" :max-depth 3}]
+                    [:src {:match #pattern "^src/[^/]+/"}]
+                    [:runtime-doc {:match #pattern "^runtime/doc/" :max-depth 4}]
+                    [:runtime-lua {:match #pattern "^runtime/lua/" :max-depth 4}]
+                    [:runtime {:match #pattern "^runtime/[^/]+/" :max-depth 2}]
+                    [:test {:match #pattern "^test/[^/]+/" :max-depth 3}]
+                    [:misc {:match #pattern "^[^/]+/"}]]}
+ "pixi" {}
+ "papra" {:max-depth 6
+          :min-complexity 100
+          :exclude-paths [#pattern "package.*\\.json"
+                          #pattern "pnpm-lock.yaml"]
+          :test-paths [#pattern "fixtures"
+                       #pattern "test.ts$"]
+          :exclude-identifiers #{"expect" "eql" "test"}
+          :modules #modules
+                    [[:packages {:match #pattern "^packages/[^/]+/" :max-depth 3}]
+                     [:apps {:match #pattern "^apps/[^/]+/"}]
+                     [:changset {:match #pattern "^.changeset/"}]
+                     [:github {:match #pattern "^.github/"}]
+                     [:misc {:match #pattern "^.+"}]]}
+ "smartcc-ivr" {:log-path "/home/manu/code/work/sfr/smartcc/SmartCCIVR/log.edn"
+                :file-stats-path "/home/manu/code/work/sfr/smartcc/SmartCCIVR/file_stats.edn"
+                :words-path "/home/manu/code/work/sfr/smartcc/SmartCCIVR/words.edn"
+                :time-stop-months 95
+                :min-complexity 10
+                :exclude-paths [#pattern "package.*\\.json"]
+                :test-paths [#pattern "^test/"]
+                :exclude-identifiers #{"_" "require" "module" "exports" "describe" "it" "expect" "to" "eql" "done" "then" "should"}
+                :modules #modules
+                          [[:misc {:match #pattern "^.+"}]]}
+ "tree-sitter" {:max-depth 1
+                :min-complexity 200
+                :exclude-paths [#pattern "^Cargo.lock$"]
+                :test-paths [#pattern "(^|/)tests?/"]
+                :exclude-identifiers #{"expect" "Some" "unwrap"}
+                :modules #modules
+                          [[:crates-generate {:match #pattern "^crates/generate/" :max-depth 4}]
+                           [:crates-cli {:match #pattern "^crates/cli/" :max-depth 4}]
+                           [:crates {:match #pattern "^crates/[^/]+/?" :max-depth 2}]
+                           [:lib {:match #pattern "^lib/[^/]+/?" :max-depth 3}]
+                           [:test {:match #pattern "^test/[^/]+(?:/[^/]+/?)"}]]}
+ "zig" {:min-complexity 10000
+        :max-depth 1
+        :modules #modules
+                  [[:libc-include {:match #pattern "^lib/libc/include/" :max-depth 4}]
+                   [:lib-include {:match #pattern "^lib/include/" :max-depth 3}]
+                   [:lib-std {:match #pattern "^lib/std/" :max-depth 3}]
+                   [:lib {:match #pattern "^lib/" :max-depth 2}]
+                   [:src-codegen {:match #pattern "^src/codegen/" :max-depth 3}]
+                   [:src {:match #pattern "^src/" :max-depth 2}]
+                   [:test {:match #pattern "^test/[^/]+/" :max-depth 2}]
+                   [:doc {:match #pattern "^doc/"}]
+                   [:misc {:match #pattern "^[^./][^/]*/?"}]]}}
